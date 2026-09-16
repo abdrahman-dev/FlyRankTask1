@@ -1,4 +1,6 @@
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const openapi = require('./openapi.json');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -33,7 +35,8 @@ app.get('/', (req, res) => {
       'PUT /tasks/:id',
       'DELETE /tasks/:id',
       'GET /stats',
-      'POST /reset'
+      'POST /reset',
+      'GET /docs'
     ]
   });
 });
@@ -112,5 +115,7 @@ app.post('/reset', (req, res) => {
   resetTasks();
   res.json(tasks);
 });
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
