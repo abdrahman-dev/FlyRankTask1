@@ -11,11 +11,30 @@ let tasks = [
 ];
 let nextId = 4;
 
+function resetTasks() {
+  tasks = [
+    { id: 1, title: 'Buy groceries', done: false },
+    { id: 2, title: 'Walk the dog', done: true },
+    { id: 3, title: 'Write code', done: false }
+  ];
+  nextId = 4;
+}
+
 app.get('/', (req, res) => {
   res.json({
     name: 'Task API',
     version: '1.0',
-    endpoints: ['GET /', 'GET /health', 'GET /tasks', 'GET /tasks/:id', 'POST /tasks', 'GET /stats']
+    endpoints: [
+      'GET /',
+      'GET /health',
+      'GET /tasks',
+      'GET /tasks/:id',
+      'POST /tasks',
+      'PUT /tasks/:id',
+      'DELETE /tasks/:id',
+      'GET /stats',
+      'POST /reset'
+    ]
   });
 });
 
@@ -58,6 +77,40 @@ app.post('/tasks', (req, res) => {
   const task = { id: nextId++, title: title.trim(), done: false };
   tasks.push(task);
   res.status(201).json(task);
+});
+
+app.put('/tasks/:id', (req, res) => {
+  const task = tasks.find(t => t.id === parseInt(req.params.id));
+  if (!task) return res.status(404).json({ error: `Task ${req.params.id} not found` });
+  const { title, done } = req.body;
+  if (title === undefined && done === undefined) {
+    return res.status(400).json({ error: 'Provide at least title or done' });
+  }
+  if (title !== undefined) {
+    if (typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ error: 'Title must be a non-empty string' });
+    }
+    task.title = title.trim();
+  }
+  if (done !== undefined) {
+    if (typeof done !== 'boolean') {
+      return res.status(400).json({ error: 'Done must be a boolean' });
+    }
+    task.done = done;
+  }
+  res.json(task);
+});
+
+app.delete('/tasks/:id', (req, res) => {
+  const idx = tasks.findIndex(t => t.id === parseInt(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: `Task ${req.params.id} not found` });
+  tasks.splice(idx, 1);
+  res.status(204).send();
+});
+
+app.post('/reset', (req, res) => {
+  resetTasks();
+  res.json(tasks);
 });
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
